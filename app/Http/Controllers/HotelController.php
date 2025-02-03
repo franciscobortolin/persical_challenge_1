@@ -10,27 +10,12 @@ class HotelController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Hotel::query();
-
         $perPage = $request->input('per_page', 10);
 
-        if ($request->has('min_rating')) {
-            $query->where('rating', '>=', $request->min_rating);
-        }
-
-        if ($request->has('max_rating')) {
-            $query->where('rating', '<=', $request->max_rating);
-        }
-
-        if ($request->has('min_price')) {
-            $query->where('price_per_night', '>=', $request->min_price);
-        }
-
-        if ($request->has('max_price')) {
-            $query->where('price_per_night', '<=', $request->max_price);
-        }
-
-        $hotels = $query->paginate($perPage);
+        $hotels = Hotel::query()
+        ->ratingBetween($request->min_rating, $request->max_rating)
+        ->priceBetween($request->min_price, $request->max_price)
+        ->paginate($perPage);
 
         return HotelResource::collection($hotels);
     }

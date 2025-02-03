@@ -10,27 +10,14 @@ class TourController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Tour::query();
-
         $perPage = $request->input('per_page', 10);
 
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
+        $tours = Tour::query()
+        ->priceBetween($request->min_price, $request->max_price)
+        ->startDateAfter($request->start_date)
+        ->endDateBefore($request->end_date)
+        ->paginate($perPage);
 
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        if ($request->has('start_date')) {
-            $query->where('start_date', '>=', $request->start_date);
-        }
-
-        if ($request->has('end_date')) {
-            $query->where('end_date', '<=', $request->end_date);
-        }
-
-        $tours = $query->paginate($perPage);
         return TourResource::collection($tours);
     }
 
