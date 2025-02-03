@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TourResource;
 use App\Models\Tour;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,8 @@ class TourController extends Controller
     public function index(Request $request)
     {
         $query = Tour::query();
+
+        $perPage = $request->input('per_page', 10);
 
         if ($request->has('min_price')) {
             $query->where('price', '>=', $request->min_price);
@@ -27,7 +30,8 @@ class TourController extends Controller
             $query->where('end_date', '<=', $request->end_date);
         }
 
-        return response()->json($query->get(), 200);
+        $tours = $query->paginate($perPage);
+        return TourResource::collection($tours);
     }
 
     public function store(Request $request)
@@ -41,12 +45,12 @@ class TourController extends Controller
         ]);
 
         $tour = Tour::create($validatedData);
-        return response()->json($tour, 201);
+        return response()->json(new TourResource($tour), 201);
     }
 
     public function show(Tour $tour)
     {
-        return response()->json($tour, 200);
+        return new TourResource($tour);
     }
 
     public function update(Request $request, Tour $tour)
@@ -60,7 +64,7 @@ class TourController extends Controller
         ]);
 
         $tour->update($validatedData);
-        return response()->json($tour, 200);
+        return response()->json(new TourResource($tour), 200);
     }
 
     public function destroy(Tour $tour)

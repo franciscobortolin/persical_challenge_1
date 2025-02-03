@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\HotelResource;
 use App\Models\Hotel;
 use Illuminate\Http\Request;
 
@@ -10,6 +11,8 @@ class HotelController extends Controller
     public function index(Request $request)
     {
         $query = Hotel::query();
+
+        $perPage = $request->input('per_page', 10);
 
         if ($request->has('min_rating')) {
             $query->where('rating', '>=', $request->min_rating);
@@ -27,7 +30,9 @@ class HotelController extends Controller
             $query->where('price_per_night', '<=', $request->max_price);
         }
 
-        return response()->json($query->get(), 200);
+        $hotels = $query->paginate($perPage);
+
+        return HotelResource::collection($hotels);
     }
 
     public function store(Request $request)
@@ -41,12 +46,12 @@ class HotelController extends Controller
         ]);
 
         $hotel = Hotel::create($validatedData);
-        return response()->json($hotel, 201);
+        return response()->json(new HotelResource($hotel), 201);
     }
 
     public function show(Hotel $hotel)
     {
-        return response()->json($hotel, 200);
+        return new HotelResource($hotel);
     }
 
     public function update(Request $request, Hotel $hotel)
@@ -60,7 +65,7 @@ class HotelController extends Controller
         ]);
 
         $hotel->update($validatedData);
-        return response()->json($hotel, 200);
+        return response()->json(new HotelResource($hotel), 200);
     }
 
     public function destroy(Hotel $hotel)

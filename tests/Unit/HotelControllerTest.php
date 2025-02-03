@@ -30,8 +30,8 @@ it('can retrieve all hotels', function () {
     $hotels = Hotel::factory()->count(3)->create();
 
     $response = $this->getJson('/api/hotels');
-    $response->assertStatus(Response::HTTP_OK)
-        ->assertJsonCount(3);
+    $response->assertStatus(Response::HTTP_OK);
+    $this->assertCount(3,$response->json('data'));
 });
 
 it('can retrieve hotels with filters', function () {

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Benchmark;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
+use App\Enums\BookingStatus;
 
 uses(TestCase::class, RefreshDatabase::class);
 
@@ -38,8 +39,8 @@ it('can retrieve all bookings', function () {
     Booking::factory()->count(3)->create();
 
     $response = $this->getJson('/api/bookings');
-    $response->assertStatus(Response::HTTP_OK)
-        ->assertJsonCount(3);
+    $response->assertStatus(Response::HTTP_OK);
+    $this->assertCount(3,$response->json('data'));
 });
 
 it('can retrieve all bookings performing ok', function(){
@@ -119,4 +120,26 @@ it('can delete a booking', function () {
 it('returns 404 when deleting a non-existent booking', function () {
     $response = $this->deleteJson('/api/bookings/999');
     $response->assertStatus(Response::HTTP_NOT_FOUND);
+});
+
+it('can cancel a booking', function () {
+    $booking = Booking::factory()->create([
+        'status' => BookingStatus::CONFIRMED,
+    ]);
+
+    $response = $this->patchJson("/api/bookings/{$booking->id}/cancel");
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJson([
+            'message' => 'Booking canceled successfully.',
+            'data' => [
+                'id' => $booking->id,
+                'status' => BookingStatus::CANCELED->value,
+            ]
+        ]);
+
+    $this->assertDatabaseHas('bookings', [
+        'id' => $booking->id,
+        'status' => BookingStatus::CANCELED->value,
+    ]);
 });
